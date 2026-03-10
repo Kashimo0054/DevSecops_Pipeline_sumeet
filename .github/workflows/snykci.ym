@@ -1,0 +1,21 @@
+name: Snyk Security Scan
+
+on:
+  workflow_call:
+
+jobs:
+  snyk:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate with Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk Dependency Scan
+        run: snyk test --file=pom.xml
