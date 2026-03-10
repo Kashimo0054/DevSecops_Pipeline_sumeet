@@ -8,5 +8,10 @@ jobs:
   build:
     uses: ./.github/workflows/build-petclinic.yml
     secrets: inherit
+  
+  sonar:
+    needs: build
+    uses: ./.github/workflows/sonarci.yml
+    secrets: inherit  
 
 
