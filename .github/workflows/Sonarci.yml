@@ -1,0 +1,19 @@
+name: Sonar Scan
+
+on:
+  workflow_call:
+
+jobs:
+  sonar:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SonarCloud Scan
+        run: |
+          mvn sonar:sonar \
+          -Dsonar.projectKey=sumeet-devsecops_DevSecops_Pipeline_sumeet \
+          -Dsonar.organization=sumeet-devsecops \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
