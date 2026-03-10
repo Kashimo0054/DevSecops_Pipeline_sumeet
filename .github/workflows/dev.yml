@@ -15,5 +15,5 @@ jobs:
     secrets: inherit
   sonar:
      uses: ./.github/workflows/sonarCI.yml
-     needs: Build Petclinic
+     needs: build
      secrets: inherit  
