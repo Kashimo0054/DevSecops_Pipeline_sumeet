@@ -1,0 +1,17 @@
+
+name: Sonar Scan
+
+on:
+ workflow_dispatch:
+
+jobs:
+  sonar:
+    runs-on: self-hosted
+    #needs: build  # Ensures Sonar runs after build succeeds
+    steps:
+      - name: SonarCloud Scan
+        run: mvn sonar:sonar \
+		-Dsonar.projectKey=sumeet-devsecops_DevSecops_Pipeline_sumeet \
+		-Dsonar.organization=sumeet-devsecops \ \
+		-Dsonar.host.url=https://sonarcloud.io \
+		-Dsonar.login=${{ secrets.SONAR_TOKEN }}	  
