@@ -18,9 +18,15 @@ jobs:
     uses: ./.github/workflows/testci.yml
     needs: sonar
     secrets: inherit
+
+  snyk:
+    needs: test
+    uses: ./.github/workflows/snykci.yml
+    secrets: inherit
+  
   
   imagepush:
     uses: ./.github/workflows/imagepushci.yml
-    needs: test
+    needs: snyk
     secrets: inherit
     
