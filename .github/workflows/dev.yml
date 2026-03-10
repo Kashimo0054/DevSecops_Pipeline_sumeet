@@ -11,9 +11,9 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/javabuild.yml
+    uses: ./.github/workflows/build-petclinic.yml
     secrets: inherit
   sonar:
-     uses: ./.github/workflows/sonar.yml
+     uses: ./.github/workflows/sonarCI.yml
      needs: build
      secrets: inherit  
