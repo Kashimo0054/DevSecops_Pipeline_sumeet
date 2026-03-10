@@ -8,13 +8,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build Petclinic with Maven
-        run: |
-          chmod +x mvnw
-          ./mvnw clean package -DskipTests
-
-      - name: Show build artifact
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+      
+      - name: Show Build Artifact
         run: ls -lh target
