@@ -1,7 +1,7 @@
 name: Snyk Security Scan
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   snyk:
