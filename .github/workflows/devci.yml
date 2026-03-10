@@ -6,7 +6,7 @@ on:
 jobs:
 
   build:
-    uses: ./.github/workflows/build-petclinic.yml
+    uses: ./.github/workflows/build-petclinicci.yml
     secrets: inherit
   
   sonar:
