@@ -22,4 +22,4 @@ jobs:
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       - name: Run Snyk Test
-        run: snyk test --file=pom.xml
+        run: snyk test --file=pom.xml --package-manager=maven
