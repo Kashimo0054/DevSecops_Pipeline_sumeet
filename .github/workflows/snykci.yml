@@ -1,12 +1,25 @@
-name: workflow for Maven using Snyk security scan
-on: workflow_dispatch
+name: Snyk Security Scan
+
+on:
+  workflow_call:
+
 jobs:
-  security:
-    runs-on: ubuntu-latest
+  snyk:
+    runs-on: self-hosted
+
     steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/maven@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk Test
+        run: snyk test --file=pom.xml
