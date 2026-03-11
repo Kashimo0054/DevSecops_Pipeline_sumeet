@@ -1,0 +1,43 @@
+name: Snyk Security - Dependency Check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Java must be set up BEFORE Snyk runs, so Maven can resolve the dependency tree
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Build the project first so Snyk can inspect resolved dependencies
+      - name: Build with Maven (skip tests)
+        run: ./mvnw package -DskipTests
+
+      # Run Snyk Maven scan
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/maven@master
+        continue-on-error: true   # set to false if you want the build to FAIL on vulnerabilities
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+      # Optional: upload results to GitHub Security tab
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+        continue-on-error: true  # sarif upload is optional, won't break if it fails
