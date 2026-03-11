@@ -20,20 +20,25 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Use system mvn instead of ./mvnw (wrapper files are missing from repo)
       - name: Build with Maven (skip tests)
         run: mvn package -DskipTests
 
-      # Run Snyk and explicitly output sarif file
+      # Fix: override JAVA_HOME to the exact binary path Snyk's container can use
+      - name: Fix JAVA_HOME for Snyk
+        run: |
+          JAVA_BIN=$(which java)
+          JAVA_REAL=$(readlink -f $JAVA_BIN)
+          echo "JAVA_HOME=$(dirname $(dirname $JAVA_REAL))" >> $GITHUB_ENV
+
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/maven@master
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          JAVA_HOME: ${{ env.JAVA_HOME }}
         with:
           args: --severity-threshold=high --sarif-file-output=snyk.sarif
 
-      # Upload sarif only if the file was actually created
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('snyk.sarif') != ''
