@@ -14,30 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Java must be set up BEFORE Snyk runs, so Maven can resolve the dependency tree
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Build the project first so Snyk can inspect resolved dependencies
+      # Use system mvn instead of ./mvnw (wrapper files are missing from repo)
       - name: Build with Maven (skip tests)
-        run: ./mvnw package -DskipTests
+        run: mvn package -DskipTests
 
-      # Run Snyk Maven scan
+      # Run Snyk and explicitly output sarif file
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/maven@master
-        continue-on-error: true   # set to false if you want the build to FAIL on vulnerabilities
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high
+          args: --severity-threshold=high --sarif-file-output=snyk.sarif
 
-      # Optional: upload results to GitHub Security tab
+      # Upload sarif only if the file was actually created
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk.sarif') != ''
         with:
           sarif_file: snyk.sarif
-        continue-on-error: true  # sarif upload is optional, won't break if it fails
+        continue-on-error: true
