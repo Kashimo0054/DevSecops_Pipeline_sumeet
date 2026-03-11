@@ -1,21 +1,20 @@
-name: Example workflow for Maven using Snyk
-on: push
-
 jobs:
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-
-  # Run Snyk dependency vulnerability scan (SCA)
-  
-      - name: Run Snyk dependency scan
-        uses: snyk/actions/maven-3-jdk-17@master
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Run Snyk Code analysis
+        uses: snyk/actions/setup@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: test
-          args: --maven-args="-f pom.xml"
-
-     
+          command: code test
+      - name: Run Snyk dependency scan
+        run: snyk test --file=pom.xml
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
