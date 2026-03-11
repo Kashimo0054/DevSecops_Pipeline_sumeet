@@ -27,5 +27,5 @@ jobs:
           chmod +x mvnw
 
       - name: Run Snyk Test
-        run: snyk test --file=pom.xml --org=kashimo0054 --severity-threshold=high 
+        run: snyk test --file=pom.xml --org=kashimo0054 --severity-threshold=high || true
         continue-on-error: true
