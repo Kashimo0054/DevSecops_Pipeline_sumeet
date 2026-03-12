@@ -28,4 +28,8 @@ jobs:
 
       - name: Run Snyk Test
         run: snyk test --file=pom.xml --org=kashimo0054 --severity-threshold=high || true
-        continue-on-error: true
+        
+
+      - name: Run Snyk TestMonitor
+        run: snyk monitor --file=pom.xml --org=kashimo0054 || true
+       
