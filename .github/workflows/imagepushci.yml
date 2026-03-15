@@ -1,7 +1,7 @@
 name: Docker Image Build and Push
 
 on:
- workflow_call:
+  workflow_call:
 
 jobs:
   image_push:
@@ -32,3 +32,15 @@ jobs:
 
       - name: Push Docker Image
         run: sudo docker push ${{ env.DOCKER_IMAGE }}
+
+      # 🔹 New steps to update GitOps repo
+      - name: Clone GitOps repo
+        run: |
+          git clone https://github.com/Kashimo0054/petclinic-k8s-gitops.git
+          cd petclinic-k8s-gitops
+          sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE }}|" petclinic-deployment.yaml
+          git config --global user.name "ci-bot"
+          git config --global user.email "ci-bot@example.com"
+          git add petclinic-deployment.yaml
+          git commit -m "Update image to ${{ env.DOCKER_IMAGE }}"
+          git push
