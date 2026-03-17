@@ -35,6 +35,8 @@ jobs:
 
       # 🔹 New steps to update GitOps repo
       - name: Clone GitOps repo
+        env:
+          PAT: ${{ secrets.SECRET_PAT }}
         run: |
           git clone https://github.com/Kashimo0054/petclinic-k8s-gitops.git
           cd petclinic-k8s-gitops
