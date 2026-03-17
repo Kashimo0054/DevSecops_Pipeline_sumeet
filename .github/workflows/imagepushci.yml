@@ -47,31 +47,26 @@ jobs:
         run: sudo docker push ${{ env.DOCKER_IMAGE }}
 
       # -----------------------------------------------------------
-      # 4. REMOVE OLD CACHED GITOPS FOLDER (CRITICAL FIX)
+      # 4. REMOVE OLD CACHED GITOPS FOLDER
       # -----------------------------------------------------------
-      - name: Remove old GitOps repo (important for self-hosted runner)
+      - name: Remove old GitOps repo (self-hosted runner fix)
         run: |
           rm -rf gitops
           rm -rf petclinic-k8s-gitops
           echo "Old cached GitOps folders removed."
 
       # -----------------------------------------------------------
-      # 5. Checkout GitOps repo with PAT authentication
+      # 5. MANUAL CLONE WITH PAT (checkout alternative)
       # -----------------------------------------------------------
-      - name: Checkout GitOps repo (authenticated)
-        uses: actions/checkout@v4
-        with:
-          repository: Kashimo0054/petclinic-k8s-gitops
-          token: ${{ secrets.SECRET_PAT }}
-          path: gitops
-          ref: main
+      - name: Clone GitOps Repo manually
+        env:
+          PAT: ${{ secrets.SECRET_PAT }}
+        run: |
+          git clone https://x-access-token:${PAT}@github.com/Kashimo0054/petclinic-k8s-gitops.git gitops
 
-      # Optional: Debug remote to confirm PAT is applied
       - name: DEBUG REMOTE
         working-directory: gitops
-        run: |
-          echo "Remote URLs:"
-          git remote -v
+        run: git remote -v
 
       # -----------------------------------------------------------
       # 6. Update deployment YAML with new Docker image
@@ -102,7 +97,6 @@ jobs:
 
         run: |
           set -e
-
           git config user.name  "$GIT_AUTHOR_NAME"
           git config user.email "$GIT_AUTHOR_EMAIL"
 
@@ -115,7 +109,4 @@ jobs:
 
           git commit -m "Update image to ${{ env.DOCKER_IMAGE }}"
 
-          # Force remote URL to use PAT (guarantees authentication)
-          git remote set-url origin https://x-access-token:${PAT}@github.com/Kashimo0054/petclinic-k8s-gitops.git
-
-          git push origin HEAD:main
+          git push https://x-access-token:${PAT}@github.com/Kashimo0054/petclinic-k8s-gitops.git HEAD:main
