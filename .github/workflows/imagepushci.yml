@@ -3,6 +3,9 @@ name: Docker Image Build and Push
 on:
   workflow_call:
 
+permissions:
+  contents: write   # harmless here; useful if you ever switch to GITHUB_TOKEN
+
 jobs:
   image_push:
     runs-on: self-hosted
@@ -11,8 +14,11 @@ jobs:
       DOCKER_IMAGE: kashimo0054/petapp:${{ github.sha }}
 
     steps:
-      - uses: actions/checkout@v4
+      # 1) Checkout the current (build) repo
+      - name: Checkout build repo
+        uses: actions/checkout@v4
 
+      # 2) Download JAR Artifact
       - name: Download JAR Artifact
         uses: actions/download-artifact@v4
         with:
@@ -22,6 +28,7 @@ jobs:
       - name: Verify Artifact
         run: ls -lh target
 
+      # 3) Build & push Docker image
       - name: Build Docker Image
         run: |
           sudo docker build -t ${{ env.DOCKER_IMAGE }} .
@@ -33,16 +40,55 @@ jobs:
       - name: Push Docker Image
         run: sudo docker push ${{ env.DOCKER_IMAGE }}
 
-      # 🔹 New steps to update GitOps repo
-      - name: Clone GitOps repo
-        env:
-          PAT: ${{ secrets.SECRET_PAT }}
+      # 4) Checkout the GitOps repo (authenticated with PAT) into ./gitops
+      - name: Checkout GitOps repo (authenticated)
+        uses: actions/checkout@v4
+        with:
+          repository: Kashimo0054/petclinic-k8s-gitops
+          token: ${{ secrets.SECRET_PAT }}   # PAT with 'repo' scope
+          path: gitops
+          ref: main                          # change if your default branch differs
+
+      # 5) Update the deployment image in the GitOps repo ROOT
+      - name: Update image in GitOps manifest
+        working-directory: gitops
         run: |
-          git clone https://github.com/Kashimo0054/petclinic-k8s-gitops.git
-          cd petclinic-k8s-gitops
-          sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE }}|" petclinic-deployment.yaml
-          git config --global user.name "Kashimo0054"
-          git config --global user.email "sumeettanpure2729@gmail.com"
+          set -e
+          FILE="petclinic-deployment.yaml"
+
+          echo "Before update:"
+          grep -E '^\s*image:' "$FILE" || true
+
+          # Replace the entire image value with the new image tag from this build
+          sed -i -E "s|(^\s*image:\s*).*|\1${{ env.DOCKER_IMAGE }}|" "$FILE"
+
+          echo "After update:"
+          grep -E '^\s*image:' "$FILE" || true
+
+          echo "Updated file content:"
+          sed -n '1,120p' "$FILE"
+
+      # 6) Commit & push back to GitOps repo using the same tokened remote
+      - name: Commit and push changes to GitOps
+        working-directory: gitops
+        env:
+          GIT_AUTHOR_NAME: "Kashimo0054"
+          GIT_AUTHOR_EMAIL: "sumeettanpure2729@gmail.com"
+          GIT_COMMITTER_NAME: "Kashimo0054"
+          GIT_COMMITTER_EMAIL: "sumeettanpure2729@gmail.com"
+        run: |
+          set -e
+          git config user.name  "$GIT_AUTHOR_NAME"
+          git config user.email "$GIT_AUTHOR_EMAIL"
+
           git add petclinic-deployment.yaml
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
           git commit -m "Update image to ${{ env.DOCKER_IMAGE }}"
-          git push
+
+          # 'actions/checkout' already set 'origin' with the PAT. Just push.
+          git push origin HEAD:main   # change 'main' if needed
