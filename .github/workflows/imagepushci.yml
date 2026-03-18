@@ -36,11 +36,13 @@ jobs:
       # 🔹 New steps to update GitOps repo
       - name: Clone GitOps repo
         run: |
-          git clone https://github.com/Kashimo0054/petclinic-k8s-gitops.git
+          git clone https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/Kashimo0054/petclinic-k8s-gitops.git
           cd petclinic-k8s-gitops
+
           sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE }}|" petclinic-deployment.yaml
-          git config --global user.name "ci-bot"
-          git config --global user.email "ci-bot@example.com"
+
+          git config --global user.name "kashimo0054"
+          git config --global user.email "sumeettanpure2729@gmail.com"
           git add petclinic-deployment.yaml
           git commit -m "Update image to ${{ env.DOCKER_IMAGE }}"
           git push
